@@ -136,23 +136,36 @@ install_delta_for_debian() {
 
 # Install delta based on OS (fallback to package manager)
 install_package() {
-    OS_TYPE=$(detect_os)
+    local OS_TYPE=$(detect_os)
+    local version="${VERSION:-latest}"
     local package_name=$1
-    echo "Detected OS type: $OS_TYPE"
+
+    echo "Installing ${package_name}; version: ${version}; on OS: ${OS_TYPE}"
     
     case "$OS_TYPE" in
         redhat)
             echo "Installing delta using dnf..."
-            run dnf install -y ${package_name}
+            local pkg=${package_name}
+            if [[ -z ${version} ]]; then
+                pkg="${package_name}-${version}"
+            fi
+            run dnf install -y ${pkg}
             ;;
         alpine)
             echo "Installing delta using pacman..."
-            run pacman -S --noconfirm ${package_name}
+            local pkg=${package_name}
+            if [[ -z ${version} ]]; then
+                pkg="${package_name}=${version}"
+            fi
+            run apk add --no-interactiv ${pkg}
             ;;
         debian)
             echo "Installing delta using apt..."
-            run apt update -y
-            run apt install -y ${package_name}
+            run apt-get update -y
+            if [[ -z ${version} ]]; then
+                pkg="${package_name}=${version}"
+            fi
+            run apt-get install -y ${pkg}
             ;;
         *)
             echo "Unsupported OS or package manager not detected"
@@ -166,8 +179,8 @@ install_package() {
 
 # Install delta based on OS (fallback to package manager)
 install_delta() {
+    echo "Installing delta"
     OS_TYPE=$(detect_os)
-    echo "Detected OS type: $OS_TYPE"
     
     case "$OS_TYPE" in
         redhat)
@@ -181,7 +194,7 @@ install_delta() {
             install_delta_for_debian
             ;;
         *)
-            echo "Unsupported OS or package manager not detected"
+            echo "Unsupported OS or package manager not detected: ${OS_TYPE}"
             echo "Please file an issue with the container OS information at:"
             echo "https://github.com/rcleveng/devcontainer-features/issues/new"
 
@@ -190,14 +203,4 @@ install_delta() {
     esac
 }
 
-echo "Activating feature 'delta'"
-
-# Install delta
 install_delta
-
-echo "The effective dev container remoteUser is '$_REMOTE_USER'"
-echo "The effective dev container remoteUser's home directory is '$_REMOTE_USER_HOME'"
-
-echo "The effective dev container containerUser is '$_CONTAINER_USER'"
-echo "The effective dev container containerUser's home directory is '$_CONTAINER_USER_HOME'"
-
