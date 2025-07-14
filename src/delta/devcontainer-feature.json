@@ -1,14 +1,14 @@
 {
     "name": "Delta Pager",
     "id": "delta",
-    "version": "0.0.0",
+    "version": "1.0.0",
     "description": "Installs the delta pager for git",
     "options": {
         "version": {
             "type": "string",
             "proposals": [
                 "latest",
-                "0.18.2",
+                "0.18.2"
             ],
             "default": "latest",
             "description": "The version of delta to install"
