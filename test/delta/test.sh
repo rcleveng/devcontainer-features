@@ -42,6 +42,8 @@ source dev-container-features-test-lib
 # check <LABEL> <cmd> [args...]
 check "find delta" bash -c "delta --version"
 
+check "check GIT_PAGER" bash -c "test ! -z $GIT_PAGER"
+
 # Report results
 # If any of the checks above exited with a non-zero exit code, the test will fail.
 reportResults
