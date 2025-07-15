@@ -134,6 +134,74 @@ install_delta_for_debian() {
     delta --version
 }
 
+install_delta_for_alpine() {
+    local version="${VERSION:-latest}"
+    local arch=$(detect_architecture)
+    local temp_dir="/tmp/delta-install"
+    local download_url
+    
+    echo "Installing delta from GitHub releases..."
+    echo "Architecture: $arch"
+    echo "Version: $version"
+
+    if [ "$version" = "latest" ]; then
+      version=$(curl -s https://api.github.com/repos/dandavison/delta/releases/latest | jq -r '.name')
+    fi
+    echo "Version: $version"
+    
+    # Check to see if curl exists, if not install with install_package
+    if ! command -v curl >/dev/null 2>&1; then
+        install_package "curl"
+    fi
+    
+    # Create temporary directory
+    run mkdir -p "$temp_dir"
+    local filename="delta-${version}-${arch}-unknown-linux-musl.tar.gz"
+
+    case "$arch" in
+        arm64)
+            apk add gcompat || true
+            filename="delta-${version}-aarch64-unknown-linux-gnu.tar.gz"
+            ;;
+        armhf)
+            apk add gcompat || true
+            filename="delta-${version}-arm-unknown-linux-gnueabihf.tar.gz"
+            ;;
+        amd64)
+            filename="delta-${version}-x86_64-unknown-linux-musl.tar.gz"
+            ;;
+        *)
+            echo "Unsupported architecture: $arch" >&2
+            exit 1
+            ;;
+    esac
+    
+    # Get the latest release URL if version is "latest"
+    download_url="https://github.com/dandavison/delta/releases/download/${version}/${filename}"
+    echo "Downloading from: $download_url"
+    
+    if [ -z "$download_url" ]; then
+        echo "❌ Could not find delta binary for architecture: $arch" >&2
+        exit 1
+    fi
+    
+    echo "Downloading from: $download_url"
+    
+    # Download and extract
+    curl -L -o "$temp_dir/${filename}" "$download_url"
+    run tar xz --strip-component 1 -f "$temp_dir/${filename}" -C "$temp_dir"
+    ls -lah $temp_dir
+    run mv "$temp_dir/delta" /usr/bin/delta
+    run chmod +x /usr/bin/delta
+
+    # Cleanup
+    run rm -rf "$temp_dir"
+    
+    echo "✅ Delta installed successfully at: $(command -v delta)"
+    delta --version
+}
+
+
 # Install delta based on OS (fallback to package manager)
 install_package() {
     local OS_TYPE=$(detect_os)
@@ -187,7 +255,7 @@ install_delta() {
             install_package "git-delta"
             ;;
         alpine)
-            install_package "git-delta"
+            install_delta_for_alpine
             ;;
         debian)
             # Can't use apt for this
