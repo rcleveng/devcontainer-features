@@ -1,7 +1,7 @@
 {
     "name": "Delta Pager",
     "id": "delta",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Installs the delta pager for git",
     "options": {
         "version": {
@@ -18,6 +18,6 @@
         "ghcr.io/devcontainers/features/common-utils"
     ],
     "containerEnv": {
-        "GIT_PAGER": "/usr/local/bin/delta"
+        "GIT_PAGER": "/usr/bin/delta"
     }
 }

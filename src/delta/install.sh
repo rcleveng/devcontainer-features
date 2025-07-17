@@ -130,7 +130,8 @@ install_delta_for_debian() {
     # Cleanup
     run rm -rf "$temp_dir"
     
-    echo "✅ Delta installed successfully at: $(command -v delta)"
+    export GIT_PAGER=$(command -v delta)
+    echo "✅ Delta installed successfully at: ${GIT_PAGER}"
     delta --version
 }
 
